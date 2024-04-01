@@ -11,7 +11,7 @@ from digitecScrapy import DigitecScrapy
 digitecScrapy = DigitecScrapy()
 
 article_number = 25048099
-digitecScrapy.get_article_details_as_json(article_number, print_out=True, safe=True)
+digitecScrapy.get_article_details(article_number, print_out=True, safe_zio=False)
 ```
 
 The print out looks like the following:
