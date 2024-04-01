@@ -19,7 +19,7 @@ class ArticleDetail():
         self.is_deleted: bool = data['mandatorSpecificData']['isDeleted']
         self.images: list[Image] = self.__get_images(data['product']['images'])
         self.suppliers: list[Supplier] = self.__get_supplier(data['offers'])
-        self.specification: list[Specification] = self.__get_specification(data['productDetails']['specifications'])
+        self.specification: list[SpecificationGroup] = self.__get_specification(data['productDetails']['specifications'])
 
     def __get_images(self, image_data_json):
         images: list[Image] = []
@@ -34,14 +34,16 @@ class ArticleDetail():
         return suppliers
     
     def __get_specification(self, specification_data_json):
-        specifications: list[Specification] = []
+        specification_groups = []
         for specification in specification_data_json:
-            header = specification['title']
+            specification_group = SpecificationGroup(specification)
+            specifications: list[Specification] = []
             for detail in specification['properties']:
-                specifications.append(Specification(detail, header))
-        return specifications
+                specifications.append(Specification(detail))
 
-
+            specification_group.specifications = specifications
+            specification_groups.append(specification_group)
+        return specification_groups
 
     def __repr__(self) -> str:
         return f'{self.number:8}  {self.name:40}  {self.product_type:20}'
@@ -57,7 +59,6 @@ class Image():
 
 class Supplier():
     def __init__(self, data) -> None:
-        print(data)
         if data['supplier'] is not None:
             self.name: str = data['supplier']['name']
         else:
@@ -109,13 +110,24 @@ class DeliveryOption():
         for key, value in self.shops.items():
             shop_info += f'\n{key}: {value}'
         return f'Mail: {self.mail}{shop_info}'
-    
+
 class Specification():
-    def __init__(self, data, header: str) -> None:
-        self.header = header
-        self.id = data['propertyId']
-        self.name = data['name']
-        self.value = data['values'][0]['value']
+    def __init__(self, data,) -> None:
+        self.id: int = data['propertyId']
+        self.name: str = data['name']
+        self.value: str = data['values'][0]['value']
 
     def __repr__(self) -> str:
         return f'{self.name}: {self.value}'
+
+class SpecificationGroup():
+    def __init__(self, data) -> None:
+        self.title: str = data['title']
+        self.description: str = data['description']
+        self.type: str = data['type']
+        self.specifications: list[Specification] = []
+    
+    def __repr__(self) -> str:
+        return f'{self.title}'
+
+
