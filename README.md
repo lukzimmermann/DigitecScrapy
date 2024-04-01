@@ -16,7 +16,7 @@ digitecScrapy.get_article_details(article_number, print_out=True, safe_zio=False
 
 The print out looks like the following:
 
-```bash
+```text
 ╔══════════════════════════════════════════════════════════════════════════════════╗
 ║ Article number:                         25048099                                 ║
 ║ Name:                                   GeForce RTX 4070 WINDFORCE OC 12G        ║
