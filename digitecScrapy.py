@@ -32,7 +32,6 @@ class DigitecScrapy():
         if safe: self.__safe_json(response.json(), path, article_number)
         
         print(f'Time: {(time.time()-start)*1000}')
-        print(response.text)
 
         return ArticleDetail(response.json())
 

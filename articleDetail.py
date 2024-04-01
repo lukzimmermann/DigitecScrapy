@@ -19,6 +19,7 @@ class ArticleDetail():
         self.is_deleted: bool = data['mandatorSpecificData']['isDeleted']
         self.images: list[Image] = self.__get_images(data['product']['images'])
         self.suppliers: list[Supplier] = self.__get_supplier(data['offers'])
+        self.specification: list[Specification] = self.__get_specification(data['productDetails']['specifications'])
 
     def __get_images(self, image_data_json):
         images: list[Image] = []
@@ -31,6 +32,16 @@ class ArticleDetail():
         for i in range(len(supplier_data_json)):
             suppliers.append(Supplier(supplier_data_json[i]))
         return suppliers
+    
+    def __get_specification(self, specification_data_json):
+        specifications: list[Specification] = []
+        for specification in specification_data_json:
+            header = specification['title']
+            for detail in specification['properties']:
+                specifications.append(Specification(detail, header))
+        return specifications
+
+
 
     def __repr__(self) -> str:
         return f'{self.number:8}  {self.name:40}  {self.product_type:20}'
@@ -98,3 +109,13 @@ class DeliveryOption():
         for key, value in self.shops.items():
             shop_info += f'\n{key}: {value}'
         return f'Mail: {self.mail}{shop_info}'
+    
+class Specification():
+    def __init__(self, data, header: str) -> None:
+        self.header = header
+        self.id = data['propertyId']
+        self.name = data['name']
+        self.value = data['values'][0]['value']
+
+    def __repr__(self) -> str:
+        return f'{self.name}: {self.value}'
