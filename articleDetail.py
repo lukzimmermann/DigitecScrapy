@@ -1,8 +1,5 @@
-import json
-
-class ArticleDetail():
+class Article():
     def __init__(self, data_json) -> None:
-
         data = data_json[0]['data']['productDetails']
         self.number: int = data['product']['productId']
         self.name: str = data['product']['name']
@@ -17,6 +14,7 @@ class ArticleDetail():
         self.small_dimension: bool = data['product']['smallDimensions']
         self.is_bestseller: bool = data['mandatorSpecificData']['isBestseller']
         self.is_deleted: bool = data['mandatorSpecificData']['isDeleted']
+        self.accessory: list[int] = data['productDetails']['popularAccessoryProductIds']
         self.images: list[Image] = self.__get_images(data['product']['images'])
         self.suppliers: list[Supplier] = self.__get_supplier(data['offers'])
         self.specification: list[SpecificationGroup] = self.__get_specification(data['productDetails']['specifications'])
