@@ -8,7 +8,7 @@ def scan(start_number: int, min_time: int):
     for i in range(22557840):
         start_time = time.time()
         try:
-            article_data = digitecScrapy.get_article_details(start_number + i, print_out=False, safe_zio=True, safe_json=False)
+            article_data = digitecScrapy.get_article_details(start_number + i, print_out=False, safe_zio=False, safe_json=True)
             print(f'{article_data.product_type:<40} {article_data.number} - {article_data.name:<40}')
         except Exception as e:
             print(f'Error - {start_number + i}  {e}')
@@ -18,5 +18,4 @@ def scan(start_number: int, min_time: int):
         if duration < min_time:
             time.sleep((min_time-duration)/1000)
 
-#scan(22557847)
-scan(22557847-10, 100)
+scan(22557847, 100000)
