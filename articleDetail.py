@@ -1,23 +1,24 @@
 class Article():
-    def __init__(self, data_json) -> None:
-        data = data_json[0]['data']['productDetails']
-        self.number: int = data['product']['productId']
-        self.name: str = data['product']['name']
-        self.product_type_id: int = data['product']['productTypeId']
-        self.product_type: str = data['product']['productTypeName']
-        self.brand_id: int = data['product']['brandId']
-        self.brand_name: int = data['product']['brandName']
-        self.average_rating: float = data['product']['averageRating']
-        self.total_ratings: int = data['product']['totalRatings']
-        self.total_questions: int = data['product']['totalQuestions']
-        self.description: str = data['product']['description']
-        self.small_dimension: bool = data['product']['smallDimensions']
-        self.is_bestseller: bool = data['mandatorSpecificData']['isBestseller']
-        self.is_deleted: bool = data['mandatorSpecificData']['isDeleted']
-        self.accessory: list[int] = data['productDetails']['popularAccessoryProductIds']
-        self.images: list[Image] = self.__get_images(data['product']['images'])
-        self.suppliers: list[Supplier] = self.__get_supplier(data['offers'])
-        self.specification: list[SpecificationGroup] = self.__get_specification(data['productDetails']['specifications'])
+    def __init__(self, data_json = None) -> None:
+        if data_json is not None:
+            data = data_json[0]['data']['productDetails']
+            self.number: int = data['product']['productId']
+            self.name: str = data['product']['name']
+            self.product_type_id: int = data['product']['productTypeId']
+            self.product_type: str = data['product']['productTypeName']
+            self.brand_id: int = data['product']['brandId']
+            self.brand_name: int = data['product']['brandName']
+            self.average_rating: float = data['product']['averageRating']
+            self.total_ratings: int = data['product']['totalRatings']
+            self.total_questions: int = data['product']['totalQuestions']
+            self.description: str = data['product']['description']
+            self.small_dimension: bool = data['product']['smallDimensions']
+            self.is_bestseller: bool = data['mandatorSpecificData']['isBestseller']
+            self.is_deleted: bool = data['mandatorSpecificData']['isDeleted']
+            self.accessory: list[int] = data['productDetails']['popularAccessoryProductIds']
+            self.images: list[Image] = self.__get_images(data['product']['images'])
+            self.suppliers: list[Supplier] = self.__get_supplier(data['offers'])
+            self.specification: list[SpecificationGroup] = self.__get_specification(data['productDetails']['specifications'])
 
     def __get_images(self, image_data_json):
         images: list[Image] = []
