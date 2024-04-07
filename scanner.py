@@ -11,10 +11,10 @@ from statusPrinter import Status, StatusPrinter
 
 load_dotenv()
 
-SERVER_URL = str(os.getenv("SERVER_URL"))
-DATA_PATH = str(os.getenv("DATA_PATH"))
-ZIP_PATH = str(os.getenv("ZIP_PATH"))
 TOKEN = str(os.getenv("TOKEN"))
+ZIP_PATH = str(os.getenv("ZIP_PATH"))
+DATA_PATH = str(os.getenv("DATA_PATH"))
+SERVER_URL = str(os.getenv("SERVER_URL"))
 
 class Scanner():
     def __init__(self, output_length: int = 10) -> None:
@@ -37,7 +37,6 @@ class Scanner():
                 self.last_article = []
                 print("End Batch-Scan")
                 time.sleep(2)
-                break
             except Exception as e:
                 print(e)
                 time.sleep(60)
@@ -48,7 +47,6 @@ class Scanner():
     def __get_batch(self):
         url = f"{SERVER_URL}/jobs/get_batch/"
         ip_address = self.__get_ip_address()
-        print(url, ip_address)
         data = {"token": TOKEN, "ip": ip_address}
         return requests.post(url, data=json.dumps(data)).json()
     
