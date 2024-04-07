@@ -30,12 +30,14 @@ class Scanner():
             try:
                 print("Start Batch-Scan")
                 batch = self.__get_batch()
+                print(batch)
                 self.__scan(batch['start'], batch['end'], batch['interval'], batch['id'])
                 self.__zip_and_delete_data()
                 self.__send_data(batch['id'])
                 self.last_article = []
                 print("End Batch-Scan")
                 time.sleep(2)
+                break
             except Exception as e:
                 print(e)
                 time.sleep(60)
@@ -45,8 +47,22 @@ class Scanner():
 
     def __get_batch(self):
         url = f"{SERVER_URL}/jobs/get_batch/"
-        data = {"token": TOKEN}
-        return requests.get(url, data=json.dumps(data)).json()
+        ip_address = self.__get_ip_address()
+        print(url, ip_address)
+        data = {"token": TOKEN, "ip": ip_address}
+        return requests.post(url, data=json.dumps(data)).json()
+    
+    def __get_ip_address(self) -> str:
+        try:
+            response = requests.get('https://httpbin.org/ip')
+            if response.status_code == 200:
+                return response.json()['origin']
+            else:
+                print("Failed to retrieve public IP")
+                return None
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
     
     def __scan(self, start: int, end: int, interval: float, id: str):
         digitecScrapy = DigitecScrapy()
