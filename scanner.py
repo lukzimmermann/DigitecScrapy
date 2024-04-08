@@ -12,12 +12,15 @@ from statusPrinter import Status, StatusPrinter
 load_dotenv()
 
 TOKEN = str(os.getenv("TOKEN"))
-ZIP_PATH = str(os.getenv("ZIP_PATH"))
-DATA_PATH = str(os.getenv("DATA_PATH"))
 SERVER_URL = str(os.getenv("SERVER_URL"))
+
+ZIP_PATH = "./data.zip"
+DATA_PATH = "./data"
 
 class Scanner():
     def __init__(self, output_length: int = 10) -> None:
+        if not os.path.exists(DATA_PATH): os.mkdir(DATA_PATH)
+
         self.last_article: list[Article] = []
         self.printer = StatusPrinter(30,18,65)
         self.output_length = output_length
@@ -68,7 +71,7 @@ class Scanner():
             start_time = time.time()
 
             try:
-                article = digitecScrapy.get_article_details(article_number, False, True, False,DATA_PATH)
+                article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
                 self.last_article.append(article)
             except Exception as e:
                 print(str(e))
