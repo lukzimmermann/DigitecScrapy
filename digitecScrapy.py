@@ -2,13 +2,17 @@ import requests
 import json
 import zlib
 import os
+from dotenv import load_dotenv
 from articleDetail import Article, DeliveryOption
 
+load_dotenv()
+
+IS_TOR_ACTIVE = os.getenv("IS_TOR_ACTIVE").lower() in ['true', 'yes', '1']
 DETAIL_URL = 'https://www.digitec.ch/api/graphql/pdp-get-product-details'
 
 class DigitecScrapy():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, proxies) -> None:
+        self.proxies = proxies
 
     def get_article_details(self, article_number: int, print_out: bool = False, safe_zio: bool = False, safe_json: bool = False, path: str = 'data') -> Article:
         response = self.__call_detail_api(article_number)
@@ -39,7 +43,10 @@ class DigitecScrapy():
             'Host': 'www.digitec.ch'
         }
 
-        return requests.post(DETAIL_URL, data=request_body, headers=headers, timeout=(2, 4))
+        if IS_TOR_ACTIVE:
+            return requests.post(DETAIL_URL, data=request_body, headers=headers, timeout=(2, 4), proxies=self.proxies)
+        else:
+            return requests.post(DETAIL_URL, data=request_body, headers=headers, timeout=(2, 4))
 
     def __safe_zio(self, json_data, path, article_number):
         if not os.path.exists(path):

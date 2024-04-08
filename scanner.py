@@ -13,6 +13,7 @@ load_dotenv()
 
 TOKEN = str(os.getenv("TOKEN"))
 SERVER_URL = str(os.getenv("SERVER_URL"))
+IS_TOR_ACTIVE = os.getenv("IS_TOR_ACTIVE").lower() in ['true', 'yes', '1']
 
 ZIP_PATH = "./data.zip"
 DATA_PATH = "./data"
@@ -25,6 +26,11 @@ class Scanner():
         self.printer = StatusPrinter(30,18,65)
         self.output_length = output_length
         self.run_scan: bool = True
+        self.proxies = {
+            'http': 'socks5h://localhost:9050',
+            'https': 'socks5h://localhost:9050'
+        }
+        
 
     def start(self):
         self.__clean_up()
@@ -40,6 +46,7 @@ class Scanner():
                 self.last_article = []
                 print("End Batch-Scan")
                 time.sleep(2)
+                break
             except Exception as e:
                 print(e)
                 time.sleep(60)
@@ -49,13 +56,22 @@ class Scanner():
 
     def __get_batch(self):
         url = f"{SERVER_URL}/jobs/get_batch/"
+        print("before get ip")
         ip_address = self.__get_ip_address()
+        print(ip_address)
         data = {"token": TOKEN, "ip": ip_address}
         return requests.post(url, data=json.dumps(data)).json()
     
     def __get_ip_address(self) -> str:
         try:
-            response = requests.get('https://httpbin.org/ip')
+            response = None
+            print(IS_TOR_ACTIVE)
+            print(type(IS_TOR_ACTIVE))
+            if IS_TOR_ACTIVE:
+                response = requests.get('https://httpbin.org/ip', proxies=self.proxies)
+            else:
+                response = requests.get('https://httpbin.org/ip')
+
             if response.status_code == 200:
                 return response.json()['origin']
             else:
@@ -66,7 +82,7 @@ class Scanner():
             return None
     
     def __scan(self, start: int, end: int, interval: float, id: str):
-        digitecScrapy = DigitecScrapy()
+        digitecScrapy = DigitecScrapy(self.proxies)
         for article_number in range(start, end+1):
             start_time = time.time()
 

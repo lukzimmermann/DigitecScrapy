@@ -1,7 +1,7 @@
-name: Deployment-Digitec-Scrapy-Main
+name: Deployment-Digitec-Scrapy-Main-Tor
 on:
   push:
-    branches: ['main']
+    branches: ['tor-version']
   workflow_dispatch:
 jobs:
   build-with-docker:
@@ -19,8 +19,8 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
-          file: ./Dockerfile
+          file: ./DockerfileTor
           push: true
-          tags: lukzimmermann/digitec_scrapy_client:latest
+          tags: lukzimmermann/digitec_scrapy_client_tor:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max

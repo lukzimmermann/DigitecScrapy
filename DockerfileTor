@@ -1,0 +1,17 @@
+FROM python:latest
+
+RUN apt-get update && apt-get install -y tor
+RUN pip install requests[socks]
+
+WORKDIR /app
+
+RUN echo "SocksPort 0.0.0.0:9050\nExitPolicy reject *:*" >> /etc/tor/torrc
+ENV HTTP_PROXY socks5://localhost:9050
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+COPY . .
+EXPOSE 9050
+
+CMD service tor start && python main.py
