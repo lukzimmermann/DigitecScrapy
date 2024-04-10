@@ -11,6 +11,7 @@ from statusPrinter import Status, StatusPrinter
 
 load_dotenv()
 
+DISPLAY_NAME = str(os.getenv("DISPLAY_NAME"))
 TOKEN = str(os.getenv("TOKEN"))
 SERVER_URL = str(os.getenv("SERVER_URL"))
 
@@ -34,7 +35,7 @@ class Scanner():
                 print("Start Batch-Scan")
                 batch = self.__get_batch()
                 print(batch)
-                self.__scan(batch['start'], batch['end'], batch['interval'], batch['id'])
+                self.__scan(batch['number_list'], batch['interval'], batch['id'])
                 self.__zip_and_delete_data()
                 self.__send_data(batch['id'])
                 self.last_article = []
@@ -50,7 +51,9 @@ class Scanner():
     def __get_batch(self):
         url = f"{SERVER_URL}/jobs/get_batch/"
         ip_address = self.__get_ip_address()
-        data = {"token": TOKEN, "ip": ip_address}
+        data = {"token": TOKEN, 
+                "ip": ip_address,
+                "display_name": DISPLAY_NAME}
         return requests.post(url, data=json.dumps(data)).json()
     
     def __get_ip_address(self) -> str:
@@ -65,18 +68,34 @@ class Scanner():
             print(f"An error occurred: {e}")
             return None
     
-    def __scan(self, start: int, end: int, interval: float, id: str):
+    def __scan(self, numbers: list[int], interval: float, id: str):
         digitecScrapy = DigitecScrapy()
-        for article_number in range(start, end+1):
+
+        for article_number in numbers:
             start_time = time.time()
 
-            try:
-                article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
-                self.last_article.append(article)
-            except Exception as e:
-                print(str(e))
-            
-            status = Status(id, start, end, article_number,len(self.last_article), self.last_article)
+            attempt_counter = 0
+
+            while True:
+                has_error = False
+                try:
+                    article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
+                    self.last_article.append(article)
+                except Exception as e:
+                    print(str(e))
+                    print(f'ERROR - {article_number} - counter={attempt_counter}')
+                
+                    has_error = True
+                    time.sleep(0.2)
+
+                attempt_counter += 1
+                
+                if not has_error:
+                    break
+                if has_error and attempt_counter > 10:
+                    break
+
+            status = Status(id, numbers[0], numbers[-1], article_number,len(self.last_article), self.last_article)
             print("")
             self.printer.print_status(status, self.output_length)
 
