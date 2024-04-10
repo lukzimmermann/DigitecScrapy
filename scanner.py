@@ -11,6 +11,7 @@ from statusPrinter import Status, StatusPrinter
 
 load_dotenv()
 
+DISPLAY_NAME = str(os.getenv("DISPLAY_NAME"))
 TOKEN = str(os.getenv("TOKEN"))
 SERVER_URL = str(os.getenv("SERVER_URL"))
 IS_TOR_ACTIVE = os.getenv("IS_TOR_ACTIVE").lower() in ['true', 'yes', '1']
@@ -40,7 +41,8 @@ class Scanner():
                 print("Start Batch-Scan")
                 batch = self.__get_batch()
                 print(batch)
-                self.__scan(batch['start'], batch['end'], batch['interval'], batch['id'])
+                print(len(batch['number_list']))
+                self.__scan(batch['number_list'], batch['interval'], batch['id'])
                 self.__zip_and_delete_data()
                 self.__send_data(batch['id'])
                 self.last_article = []
@@ -48,7 +50,7 @@ class Scanner():
                 time.sleep(2)
                 break
             except Exception as e:
-                print(e)
+                print(f"Error: {e}")
                 time.sleep(60)
 
     def stop(self):
@@ -56,17 +58,15 @@ class Scanner():
 
     def __get_batch(self):
         url = f"{SERVER_URL}/jobs/get_batch/"
-        print("before get ip")
         ip_address = self.__get_ip_address()
-        print(ip_address)
-        data = {"token": TOKEN, "ip": ip_address}
+        data = {"token": TOKEN, 
+                "ip": ip_address,
+                "display_name": DISPLAY_NAME}
         return requests.post(url, data=json.dumps(data)).json()
     
     def __get_ip_address(self) -> str:
         try:
             response = None
-            print(IS_TOR_ACTIVE)
-            print(type(IS_TOR_ACTIVE))
             if IS_TOR_ACTIVE:
                 response = requests.get('https://httpbin.org/ip', proxies=self.proxies)
             else:
@@ -81,18 +81,35 @@ class Scanner():
             print(f"An error occurred: {e}")
             return None
     
-    def __scan(self, start: int, end: int, interval: float, id: str):
+    def __scan(self, numbers: list[int], interval: float, id: str):
         digitecScrapy = DigitecScrapy(self.proxies)
-        for article_number in range(start, end+1):
+
+        for article_number in numbers:
             start_time = time.time()
 
-            try:
-                article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
-                self.last_article.append(article)
-            except Exception as e:
-                print(str(e))
+            attempt_counter = 0
+
+            while True:
+                has_error = False
+                try:
+                    article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
+                    self.last_article.append(article)
+                except Exception as e:
+                    print(str(e))
+                    print(f'ERROR - {article_number} - counter={attempt_counter}')
+                
+                    has_error = True
+                    time.sleep(1)
+
+                attempt_counter += 1
+                
+                if not has_error:
+                    break
+                if has_error and attempt_counter > 10:
+                    break
+                    
             
-            status = Status(id, start, end, article_number,len(self.last_article), self.last_article)
+            status = Status(id, numbers[0], numbers[-1], article_number,len(self.last_article), self.last_article)
             print("")
             self.printer.print_status(status, self.output_length)
 
