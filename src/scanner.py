@@ -3,11 +3,13 @@ import json
 import time
 import os
 import zipfile
-from articleDetail import Article
-from digitecScrapy import DigitecScrapy
+from src.model.articleDetail import Article
+from src.digitecScrapy import DigitecScrapy
 from dotenv import load_dotenv
 
-from statusPrinter import Status, StatusPrinter
+from src.model.custom_exception import HitRateLimitException, NotFoundException
+from src.utils.logger import logger, LogLevel
+from src.statusPrinter import Status, StatusPrinter
 
 load_dotenv()
 
@@ -26,8 +28,10 @@ class Scanner():
         self.printer = StatusPrinter(30,18,65)
         self.output_length = output_length
         self.run_scan: bool = True
+        self.error_counter = 0
+        logger(LogLevel.INFO, f"{DISPLAY_NAME} started client")
 
-    def start(self):
+    def start(self) -> None:
         self.__clean_up()
         
         while True:
@@ -40,16 +44,27 @@ class Scanner():
                 self.__send_data(batch['id'])
                 self.last_article = []
                 print("End Batch-Scan")
+                self.error_counter = 0
                 time.sleep(2)
             except Exception as e:
-                print(e)
-                time.sleep(60)
+                self.error_counter += 1
+                print(f'{self.error_counter}. Error: {e}')
+                if self.error_counter == 1:
+                    time.sleep(5)
+                elif self.error_counter > 1 and self.error_counter < 30:
+                    time.sleep(60)
+                elif self.error_counter >= 30:
+                    time.sleep(600)
+                    try:
+                        logger(LogLevel.ERROR, f"{DISPLAY_NAME} failed to start scan")
+                    except:
+                        pass
 
-    def stop(self):
+    def stop(self) -> None:
         self.run_scan = False
 
     def __get_batch(self):
-        url = f"{SERVER_URL}/jobs/get_batch/"
+        url = f"{SERVER_URL}/job/get_batch/"
         ip_address = self.__get_ip_address()
         data = {"token": TOKEN, 
                 "ip": ip_address,
@@ -68,7 +83,7 @@ class Scanner():
             print(f"An error occurred: {e}")
             return None
     
-    def __scan(self, numbers: list[int], interval: float, id: str):
+    def __scan(self, numbers: list[int], interval: float, id: str) -> None:
         digitecScrapy = DigitecScrapy()
 
         for article_number in numbers:
@@ -81,21 +96,26 @@ class Scanner():
                 try:
                     article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
                     self.last_article.append(article)
-                except Exception as e:
-                    print(str(e))
-                    print(f'ERROR - {article_number} - counter={attempt_counter}')
+                except NotFoundException as e:
+                    print(e)
+                except HitRateLimitException as e:
+                    print(e)
+                    print(f'HitRateLimit for {article_number} - attempt_counter={attempt_counter}')
                 
                     has_error = True
-                    time.sleep(0.2)
+                    time.sleep(interval)
+                except Exception as e:
+                    print(f"Not specified error: {e}")
 
                 attempt_counter += 1
                 
                 if not has_error:
                     break
                 if has_error and attempt_counter > 10:
+                    logger(LogLevel.ERROR, f"Fail to scan: {article_number}")
                     break
 
-            status = Status(id, numbers[0], numbers[-1], article_number,len(self.last_article), self.last_article)
+            status = Status(id, numbers[0], numbers[-1], article_number ,len(self.last_article), self.last_article)
             print("")
             self.printer.print_status(status, self.output_length)
 
@@ -103,7 +123,7 @@ class Scanner():
             if duration < interval:
                 time.sleep((interval-duration))
 
-    def __zip_and_delete_data(self):
+    def __zip_and_delete_data(self) -> None:
         files_to_zip = []
         for file in os.listdir(DATA_PATH):
             full_path = os.path.join(DATA_PATH, file)
@@ -116,8 +136,8 @@ class Scanner():
                 zipf.write(file, os.path.basename(file))
                 os.remove(file)
 
-    def __send_data(self, id):
-        url = f"{SERVER_URL}/jobs/upload_batch/"
+    def __send_data(self, id) -> None:
+        url = f"{SERVER_URL}/job/upload_batch/"
         data = {"id": id}
         files = {'file': open(ZIP_PATH, 'rb')}
         response = requests.post(url, files=files, data=data)
@@ -125,7 +145,7 @@ class Scanner():
         if os.path.exists(ZIP_PATH):
             os.remove(ZIP_PATH)
 
-    def __clean_up(self):
+    def __clean_up(self) -> None:
         for file in os.listdir(DATA_PATH):
             full_path = os.path.join(DATA_PATH, file)
             if os.path.isfile(full_path):

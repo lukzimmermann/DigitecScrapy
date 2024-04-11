@@ -1,4 +1,4 @@
-from articleDetail import Article
+from src.model.articleDetail import Article
 
 class Status():
     def __init__(self, job_id: str, 
