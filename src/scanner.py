@@ -38,8 +38,8 @@ class Scanner():
         
         while True:
             try:
-                print(f"Start job: {batch['id']}")
                 batch = self.__get_batch()
+                print(f"Start job: {batch['id']}")
 
                 interval =  batch['interval']
                 splitted_batch_list = self.split_batch(NUMBER_OF_THREADS, batch['number_list'])
@@ -61,7 +61,7 @@ class Scanner():
                 print("End Batch-Scan")
                 self.error_counter = 0
                 time.sleep(2)
-                #break
+                break
             except Exception as e:
                 self.error_counter += 1
                 print(f'{self.error_counter}. Error: {e}')
