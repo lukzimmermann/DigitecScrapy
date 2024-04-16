@@ -35,6 +35,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: lukzimmermann/digitec_scrapy_client:latest
+          tags: lukzimmermann/digitec_scrapy_client:${{ steps.changelog.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
