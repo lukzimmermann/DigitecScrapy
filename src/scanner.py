@@ -1,5 +1,6 @@
 import requests
 import json
+import threading
 import time
 import os
 import zipfile
@@ -19,6 +20,7 @@ SERVER_URL = str(os.getenv("SERVER_URL"))
 
 ZIP_PATH = "./data.zip"
 DATA_PATH = "./data"
+NUMBER_OF_THREADS = 4
 
 class Scanner():
     def __init__(self, output_length: int = 10) -> None:
@@ -38,14 +40,27 @@ class Scanner():
             try:
                 print("Start Batch-Scan")
                 batch = self.__get_batch()
-                print(batch)
-                self.__scan(batch['number_list'], batch['interval'], batch['id'])
+
+                interval =  batch['interval']
+                splitted_batch_list = self.split_batch(NUMBER_OF_THREADS, batch['number_list'])
+
+                threads = []
+                for i in range(NUMBER_OF_THREADS):
+                    thread = threading.Thread(target=self.__scan, args=(splitted_batch_list[i], interval*NUMBER_OF_THREADS, i))
+                    threads.append(thread)
+                    thread.start()
+
+                for thread in threads:
+                    thread.join()
+
+                #self.__scan(batch['number_list'], batch['interval'], batch['id'])
                 self.__zip_and_delete_data()
                 self.__send_data(batch['id'])
                 self.last_article = []
                 print("End Batch-Scan")
                 self.error_counter = 0
                 time.sleep(2)
+                #break
             except Exception as e:
                 self.error_counter += 1
                 print(f'{self.error_counter}. Error: {e}')
@@ -62,6 +77,24 @@ class Scanner():
 
     def stop(self) -> None:
         self.run_scan = False
+
+    def split_batch(self, number_of_threads: int, article_list: list[int]):
+        articles_small_list = []
+        rest = len(article_list)%number_of_threads
+        length = len(article_list)//number_of_threads
+        for i in range(number_of_threads):
+            articles_small_list.append(article_list[length*i:(i+1)*length])
+
+        index = 0
+        rest_list = article_list[number_of_threads*length:number_of_threads*length+rest]
+
+        for r in rest_list:
+            articles_small_list[index].append(r)
+            index += 1
+            if index > len(articles_small_list)-1:
+                index = 0
+
+        return articles_small_list
 
     def __get_batch(self):
         url = f"{SERVER_URL}/job/get_batch/"
@@ -94,8 +127,9 @@ class Scanner():
             while True:
                 has_error = False
                 try:
-                    article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
-                    self.last_article.append(article)
+                    article: Article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
+                    print(f'Thread {id}: {article.product_type:<30}{article.number:<10}{article.name:<20}')
+                    #self.last_article.append(article)
                 except NotFoundException as e:
                     pass
                 except HitRateLimitException as e:
@@ -109,13 +143,13 @@ class Scanner():
                 
                 if not has_error:
                     break
-                if has_error and attempt_counter > 10:
+                if has_error and attempt_counter > 50:
                     logger(LogLevel.ERROR, f"Fail to scan: {article_number}")
                     break
 
-            status = Status(id, numbers[0], numbers[-1], article_number ,len(self.last_article), self.last_article)
-            print("")
-            self.printer.print_status(status, self.output_length)
+            #status = Status(id, numbers[0], numbers[-1], article_number ,len(self.last_article), self.last_article)
+            #print("")
+            #self.printer.print_status(status, self.output_length)
 
             duration = (time.time() - start_time)
             if duration < interval:
