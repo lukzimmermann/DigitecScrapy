@@ -9,19 +9,20 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Generate changelog
+      - name: Generate Changelog
         id: changelog
-        uses: ./
+        uses: dannyverp/changelog-generator-action@v2
         with:
-          create-summary: true
+          output-filepath: 'CHANGELOG.md'
 
       - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
-        if: steps.changelog.outputs.skipped != 'true'
         with:
-          tag_name: ${{ steps.changelog.outputs.tag }}
-          release_name: ${{ steps.changelog.outputs.tag }}
-          body: ${{ steps.changelog.outputs.clean_changelog }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ${{ steps.changelog.outputs.changelog }}
 
       - uses: actions/checkout@v3
       - uses: docker/setup-qemu-action@v3
