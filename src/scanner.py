@@ -61,7 +61,6 @@ class Scanner():
                 print("End Batch-Scan")
                 self.error_counter = 0
                 time.sleep(2)
-                break
             except Exception as e:
                 self.error_counter += 1
                 print(f'{self.error_counter}. Error: {e}')
