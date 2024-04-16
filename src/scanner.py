@@ -97,14 +97,12 @@ class Scanner():
                     article = digitecScrapy.get_article_details(article_number, False, True, False, DATA_PATH)
                     self.last_article.append(article)
                 except NotFoundException as e:
-                    print(e)
+                    pass
                 except HitRateLimitException as e:
-                    print(e)
-                    print(f'HitRateLimit for {article_number} - attempt_counter={attempt_counter}')
-                
                     has_error = True
                     time.sleep(interval)
                 except Exception as e:
+                    logger(LogLevel.ERROR, f"{DISPLAY_NAME} failed to scan {article_number} (undefined error)")
                     print(f"Not specified error: {e}")
 
                 attempt_counter += 1
@@ -141,7 +139,12 @@ class Scanner():
         data = {"id": id}
         files = {'file': open(ZIP_PATH, 'rb')}
         response = requests.post(url, files=files, data=data)
-        print("Upload successful")
+        if response.status_code == 200:
+            print(f'{response.status_code}: {response.text}')
+        elif response.status_code == 404:
+            logger(LogLevel.ERROR, f"{DISPLAY_NAME} failed to upload data: 404 Error")
+        else:
+            print(f"{response.status_code}: Error during upload")
         if os.path.exists(ZIP_PATH):
             os.remove(ZIP_PATH)
 
