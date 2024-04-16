@@ -38,7 +38,7 @@ class Scanner():
         
         while True:
             try:
-                print("Start Batch-Scan")
+                print(f"Start job: {batch['id']}")
                 batch = self.__get_batch()
 
                 interval =  batch['interval']
@@ -55,6 +55,7 @@ class Scanner():
 
                 #self.__scan(batch['number_list'], batch['interval'], batch['id'])
                 self.__zip_and_delete_data()
+                print(f"End job: {batch['id']}")
                 self.__send_data(batch['id'])
                 self.last_article = []
                 print("End Batch-Scan")
