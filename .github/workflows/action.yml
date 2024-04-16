@@ -9,12 +9,6 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Generate Changelog
-        id: changelog
-        uses: dannyverp/changelog-generator-action@v2
-        with:
-          output-filepath: 'CHANGELOG.md'
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
