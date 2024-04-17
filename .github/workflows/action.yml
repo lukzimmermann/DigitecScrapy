@@ -17,6 +17,8 @@ jobs:
       - name: Set Release Version
         id: set-release-version
         run: echo "RELEASE_VERSION=$(echo ${{ steps.semantic-release.outputs.new_version }})" >> $GITHUB_ENV
+      - name: Print out verison
+        run: echo ${{ env.RELEASE_VERSION }}
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
