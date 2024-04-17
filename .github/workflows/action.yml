@@ -16,7 +16,7 @@ jobs:
           RELEASE_BRANCH: main
 
       - name: Print release
-        run: echo ${{ steps.semantic-release.outputs.new_version }}
+        run: echo ${{ steps.semantic-release.outputs }}
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
