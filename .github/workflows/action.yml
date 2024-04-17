@@ -14,11 +14,8 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           RELEASE_BRANCH: main
-      - name: Set Release Version
-        id: get_release_tag
-        run: echo "RELEASE_TAG=$(echo ${{ steps.semantic_release.outputs.release_tag }})" >> $GITHUB_ENV
       - name: Print out verison
-        run: echo ${{ env.RELEASE_VERSION }}
+        run: echo ${{ github.event.release.tag_name }}
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -31,6 +28,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: lukzimmermann/digitec_scrapy_client:${{ env.RELEASE_TAG }}
+          tags: lukzimmermann/digitec_scrapy_client:${{ github.event.release.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
