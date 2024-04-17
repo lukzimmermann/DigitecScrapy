@@ -15,8 +15,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           RELEASE_BRANCH: main
       - name: Set Release Version
-        id: set-release-version
-        run: echo "RELEASE_VERSION=$(echo ${{ steps.semantic-release.outputs.new_version }})" >> $GITHUB_ENV
+        id: get_release_tag
+        run: echo "RELEASE_TAG=$(echo ${{ steps.semantic_release.outputs.release_tag }})" >> $GITHUB_ENV
       - name: Print out verison
         run: echo ${{ env.RELEASE_VERSION }}
 
@@ -31,6 +31,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: lukzimmermann/digitec_scrapy_client:${{ env.RELEASE_VERSION }}
+          tags: lukzimmermann/digitec_scrapy_client:${{ env.RELEASE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
